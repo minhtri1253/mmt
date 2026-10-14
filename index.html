@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>20/10 - Vòng Quay May Mắn</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+background:radial-gradient(circle at 50% 15%,#fff 0,#ffeaf0 38%,#ffcbd9 100%);
+display:flex;justify-content:center;align-items:flex-start;color:#641d36;overflow-x:hidden;overflow-y:auto;padding:18px 0 30px}
+.card{width:min(94vw,440px);text-align:center;padding:20px 16px 22px;background:#ffffffdf;
+border:1px solid #fff;border-radius:30px;box-shadow:0 20px 60px #7d244330;backdrop-filter:blur(10px)}
+.badge{display:inline-block;background:#ffe0e9;color:#a31d4d;border-radius:999px;padding:7px 14px;font-size:12px;font-weight:800}
+h1{font-size:28px;margin:10px 0 4px}.sub{margin:0 0 16px;color:#956072;font-size:14px}
+.wheel-wrap{width:min(82vw,300px);height:min(82vw,300px);margin:0 auto 18px;position:relative}
+.pointer{position:absolute;z-index:5;left:50%;top:-4px;transform:translateX(-50%);
+width:0;height:0;border-left:17px solid transparent;border-right:17px solid transparent;
+border-top:0;border-bottom:34px solid #9d174b;filter:drop-shadow(0 3px 3px #777)}
+.wheel{width:min(82vw,300px);height:min(82vw,300px);border-radius:50%;border:10px solid #fff;
+background:conic-gradient(#e95783 0deg 180deg,#fff 180deg 360deg);
+box-shadow:0 10px 28px #80234330;transition:transform 4.4s cubic-bezier(.12,.72,.12,1);position:relative}
+.wheel:before{content:"";position:absolute;inset:0;border-radius:50%;
+background:repeating-conic-gradient(#ffffff35 0deg 1deg,transparent 1deg 45deg)}
+.wheel:after{content:"";position:absolute;width:55px;height:55px;left:50%;top:50%;
+transform:translate(-50%,-50%);border-radius:50%;background:#9d174b;border:7px solid #fff;
+box-shadow:0 3px 10px #0003}
+.txt{position:absolute;inset:0;font-weight:900;font-size:24px;z-index:2}
+.txt .win{position:absolute;top:54px;left:30px;color:#fff;transform:rotate(-28deg)}
+.txt .lose{position:absolute;bottom:52px;right:19px;color:#8e2447;transform:rotate(28deg);font-size:20px}
+button{border:0;border-radius:999px;background:#9d174b;color:#fff;padding:15px 38px;
+font-size:18px;font-weight:900;box-shadow:0 8px 20px #9d174b45;cursor:pointer}
+button:disabled{opacity:.6}
+.result{margin:16px auto 0;min-height:68px;padding:13px;border-radius:18px;background:#fff0f4;
+font-size:17px;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.result strong{font-size:20px}.gift{font-size:13px;color:#8f5267;margin-top:4px}
+.note{font-size:11px;color:#a06b7b;margin-top:10px}
+.heart{position:fixed;top:-30px;font-size:22px;animation:fall linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:0}}
+.flash{animation:flash .55s ease 3}
+@keyframes flash{50%{box-shadow:0 0 35px 15px #ff7da7}}
+@media(max-height:700px){
+      .card{padding-top:12px}
+      h1{font-size:24px}
+      .sub{margin-bottom:10px}
+      .wheel-wrap{margin-bottom:12px}
+      .result{margin-top:12px}
+    }
+    </style>
+</head>
+<body>
+<div class="card">
+  <div class="badge">📸 MMT MEDIA • 20/10</div>
+  <h1>🎀 VÒNG QUAY MAY MẮN</h1>
+  <p class="sub">Nhân dịp 20/10 — thử xem hôm nay bạn có may mắn không 💗</p>
+
+  <div id="entry">
+    <div style="font-size:15px;font-weight:800;margin:0 0 8px">👤 Nhập tên Facebook của bạn</div>
+    <input id="fbname" type="text" maxlength="80" placeholder="Ví dụ: Nguyễn Văn A"
+      autocomplete="name"
+      style="width:100%;padding:14px 16px;border:2px solid #f3c0cf;border-radius:14px;
+      font-size:16px;outline:none;text-align:center;background:#fff;margin-bottom:12px">
+    <div style="font-size:11px;color:#a06b7b;margin:-3px 0 14px">
+      Chỉ được quay 1 lần trên thiết bị này 💗
+    </div>
+  </div>
+  <div class="wheel-wrap">
+    <div class="pointer"> </div>
+    <div class="wheel" id="wheel">
+      <div class="txt"><span class="win">🎉 TRÚNG</span><span class="lose">KHÔNG<br>MAY MẮN 🥲</span></div>
+    </div>
+  </div>
+  <button id="spin" disabled>NHẬP TÊN ĐỂ QUAY 🎡</button>
+  <div class="result" id="result">Bấm quay để thử vận may nhé 👀</div>
+  <div class="note">Nếu trúng, chụp màn hình kết quả và gửi mình 📲</div>
+</div>
+<script>
+const wheel=document.getElementById('wheel'),btn=document.getElementById('spin'),
+result=document.getElementById('result'),nameInput=document.getElementById('fbname');
+let rotation=0,busy=false;
+
+function hearts(){
+ for(let i=0;i<28;i++){
+  let h=document.createElement('div');h.className='heart';
+  h.textContent=['💗','💕','🎀','✨','🌸'][Math.floor(Math.random()*5)];
+  h.style.left=Math.random()*100+'vw';h.style.animationDuration=(2+Math.random()*3)+'s';
+  h.style.animationDelay=Math.random()*.5+'s';document.body.appendChild(h);
+  setTimeout(()=>h.remove(),6000);
+ }
+}
+
+if(localStorage.getItem('mmt_20_10_spun')==='1'){
+ result.innerHTML='<strong>🥲 Bạn đã quay rồi!</strong><div class="gift">Mỗi người chỉ được tham gia 1 lần nha 💗</div>';
+ nameInput.disabled=true;
+ btn.disabled=true;
+ btn.textContent='ĐÃ QUAY RỒI';
+} else {
+ nameInput.addEventListener('input',()=>{
+  const ok=nameInput.value.trim().length>=2;
+  btn.disabled=!ok;
+  btn.textContent=ok?'XÁC NHẬN & QUAY 🎡':'NHẬP TÊN ĐỂ QUAY 🎡';
+ });
+}
+
+async function saveName(name, resultText){
+ // Netlify Forms: dữ liệu chỉ được gửi khi site được deploy trên Netlify.
+ const data=new URLSearchParams();
+ data.append('form-name','mmt-20-10');
+ data.append('facebook_name',name);
+ data.append('result',resultText);
+ data.append('time',new Date().toLocaleString('vi-VN'));
+ try{
+  await fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:data.toString()});
+ }catch(e){}
+}
+
+btn.onclick=async()=>{
+ if(busy || localStorage.getItem('mmt_20_10_spun')==='1')return;
+ const name=nameInput.value.trim();
+ if(name.length<2){nameInput.focus();return;}
+ busy=true;btn.disabled=true;nameInput.disabled=true;
+ result.innerHTML='Đang quay... 🎡';
+
+ const win=Math.random()<.5;
+ const target=win?(Math.random()*155+12):(Math.random()*155+192);
+ const cur=rotation%360;
+ rotation+=2160+((target-cur+360)%360);
+ wheel.style.transform=`rotate(${rotation}deg)`;
+
+ setTimeout(async()=>{
+  localStorage.setItem('mmt_20_10_spun','1');
+  if(win){
+   result.innerHTML='<strong>🎉 CHÚC MỪNG, '+escapeHtml(name)+'!</strong><div class="gift">📸 Tặng bạn 1 suất chụp ảnh miễn phí 20/10 💗</div>';
+   wheel.classList.add('flash'); hearts();
+   await saveName(name,'TRÚNG');
+   setTimeout(()=>wheel.classList.remove('flash'),1800);
+  }else{
+   result.innerHTML='<strong>🥲 LẦN NÀY CHƯA MAY MẮN!</strong><div class="gift">Cảm ơn '+escapeHtml(name)+' đã tham gia 💗</div>';
+   await saveName(name,'KHÔNG MAY MẮN');
+  }
+  btn.textContent='ĐÃ QUAY RỒI';
+  busy=false;
+ },4500);
+};
+
+function escapeHtml(s){
+ return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+</script>
+
+<form name="mmt-20-10" data-netlify="true" hidden>
+  <input type="text" name="facebook_name">
+  <input type="text" name="result">
+  <input type="text" name="time">
+</form>
+</body>
+</html>
